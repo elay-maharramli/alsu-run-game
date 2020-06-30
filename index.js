@@ -415,6 +415,7 @@ class Game
     _scoreUpdate()
     {
         document.getElementById('game-score').innerText = '' + ++this.score;
+        document.getElementById('game-score').innerText = '' + ++this.score;
     }
 }
 
