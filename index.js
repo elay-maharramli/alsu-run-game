@@ -274,7 +274,7 @@ class Game
 
         this.ctx = canvas.context;
         this.background = new Background(canvas, 'img/bg.png');
-        this.groundY = 124;
+        this.groundY = 84;
         this.balloonTimer = 0;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
