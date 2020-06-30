@@ -276,7 +276,7 @@ class Game
         this.background = new Background(canvas, 'img/bg.png');
         this.groundY = 124;
         this.balloonTimer = 0;
-        this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black'];
+        this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
         this.balloonSpawnInterval = 100;
