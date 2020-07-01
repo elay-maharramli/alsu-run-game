@@ -107,6 +107,7 @@ class Background
 
 class Balloon
 {
+
     constructor(x, y, dx, dy, color, context)
     {
         this.y = y;
@@ -179,7 +180,7 @@ class Player
         this.nextFrame = 0;
         this.frameInterval = 5;
 
-        this.jumpHeight = 15;
+        this.jumpHeight = 18;
         this.grounded = true;
         this.gravity = 1;
     }
@@ -279,15 +280,16 @@ class Game
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
-        this.balloonSpawnInterval = 100;
-        this.collectSound = new Sound('sound/collect.mp3');
-
+        this.balloonSpawnInterval = 25;
+        this.collectSound = new Sound('sound/collect.wav');
+        this.balloonSpeed = -5.5;
         this.player = new Player(100, this.groundY, 10, this.ctx);
         this.score = 0;
     }
 
     start()
     {
+
         if (this.gameRunning)
         {
             return false;
@@ -343,8 +345,8 @@ class Game
 
             this.balloons.push(new Balloon(
               700,
-              Helper.getRandomInt(50, 170),
-              -5.5,
+              Helper.getRandomInt(150, 250),
+              this.balloonSpeed,
               0,
               randomBalloonColor,
               this.ctx
@@ -359,11 +361,12 @@ class Game
     {
         // Update player position
         this.player.update();
-
         // Update Balloons
         for (let i in this.balloons)
         {
             // Update balloon position
+
+
             this.balloons[i].update();
 
             if (this.balloons.hasOwnProperty(i) && this.player.collidesWith(this.balloons[i]))
@@ -371,6 +374,8 @@ class Game
                 this.collectSound.play();
                 Helper.removeIndex(this.balloons, i);
                 this._scoreUpdate();
+                this.background.scrollSpeed += 0.1;
+                this.balloonSpeed -= 0.1;
             }
 
             // Remove the balloon if out of screen.
@@ -379,7 +384,6 @@ class Game
                 Helper.removeIndex(this.balloons, i);
             }
         }
-
         this.balloonTimer++;
     }
 
@@ -419,5 +423,5 @@ class Game
     }
 }
 
-let canvas = new Canvas(700, 400);
+let canvas = new Canvas(750, 500);
 let game = new Game(canvas);
