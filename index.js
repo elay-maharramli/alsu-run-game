@@ -331,9 +331,10 @@ class Game
         this.balloonSpawnInterval = 25;
         this.boxSpawnInterval = 500;
         this.collectSound = new Sound('sound/collect.wav');
+        this.boxCollideSound = new Sound('sound/boxcollide.mp3')
         this.balloonSpeed = -5.5;
         this.player = new Player(100, this.groundY, 10, this.ctx);
-        this.box = new Box(-1500,300,7,0,this.ctx);
+        this.box = new Box(1500,300,7,0,this.ctx);
         this.boxSpeed = 7;
         this.score = 0;
     }
@@ -412,7 +413,7 @@ class Game
         {
 
             this.boxes.push(new Box(
-                730,
+                900,
                 this.box.y,
                 this.boxSpeed,
                 this.box.dy,
@@ -460,6 +461,7 @@ class Game
 
             if (this.boxes.hasOwnProperty(a) && this.player.collidesWith(this.boxes[a]))
             {
+                this.boxCollideSound.play();
                 throw new Error('GAME OVER!');
             }
 
@@ -467,6 +469,12 @@ class Game
             {
                 Helper.removeIndex(this.boxes, a);
             }
+
+
+
+
+
+
 
         }
     }
@@ -511,5 +519,5 @@ class Game
     }
 }
 
-let canvas = new Canvas(800, 500);
+let canvas = new Canvas(1000, 500);
 let game = new Game(canvas);
