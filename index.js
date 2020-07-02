@@ -85,7 +85,7 @@ class Background
         this.ctx = canvas.context;
         this.img = new Image();
         this.scrollX = 0;
-        this.scrollSpeed = 4;
+        this.scrollSpeed = 6;
         this.img.src = src;
     }
 
@@ -131,9 +131,9 @@ class Balloon
     draw()
     {
         this.ctx.drawImage(
-          this.img, //The image file
-          this.x, this.y, //The destination x and y position
-          this.w, this.h //The destination height and width
+            this.img, //The image file
+            this.x, this.y, //The destination x and y position
+            this.w, this.h //The destination height and width
         );
 
     }
@@ -143,7 +143,53 @@ class Balloon
         return this.x + this.w < 0 || this.x > this.ctx.canvas.width || this.y > this.ctx.canvas.height;
     }
 }
+class Box
+{
+    constructor(x, y, dx, dy, context)
+    {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.w = 56;
+        this.h = 112;
+        this.radius = 40;
+        this.ctx = context;
+        this.img = new Image();
+        this.img.src = 'img/obstacle.jpg';
+    }
 
+    update()
+    {
+        this.x -= this.dx;
+        this.y -= this.dy;
+    }
+
+    draw()
+    {
+        this.ctx.drawImage(
+          this.img,
+          this.x, this.y,
+          this.w, this.h
+        );
+    }
+
+    outOfScreen()
+    {
+        return this.x + this.w < 0 || this.x > this.ctx.canvas.width || this.y > this.ctx.canvas.height;
+    }
+
+    collidesWith(object)
+    {
+        return this.distanceBetween(object) < (this.radius + object.radius);
+    }
+
+    distanceBetween(object)
+    {
+        return Math.sqrt(Math.pow(this.x - object.x, 2) + Math.pow(this.y - object.y, 2));
+    }
+
+}
 class Player
 {
     constructor(x, groundY, speed, context)
@@ -180,7 +226,7 @@ class Player
         this.nextFrame = 0;
         this.frameInterval = 5;
 
-        this.jumpHeight = 18;
+        this.jumpHeight = 22;
         this.grounded = true;
         this.gravity = 1;
     }
@@ -213,11 +259,11 @@ class Player
             }
 
             this.ctx.drawImage(
-              this.img,
-              this.runSprites[this.nextFrame].x, this.runSprites[this.nextFrame].y,
-              this.runSprites[this.nextFrame].w, this.runSprites[this.nextFrame].h,
-              this.x, this.y,
-              this.runSprites[this.nextFrame].w, this.runSprites[this.nextFrame].h
+                this.img,
+                this.runSprites[this.nextFrame].x, this.runSprites[this.nextFrame].y,
+                this.runSprites[this.nextFrame].w, this.runSprites[this.nextFrame].h,
+                this.x, this.y,
+                this.runSprites[this.nextFrame].w, this.runSprites[this.nextFrame].h
             );
 
             if (this.timer > this.frameInterval)
@@ -231,11 +277,11 @@ class Player
         else
         {
             this.ctx.drawImage(
-              this.img,
-              this.jumpSprites[0].x, this.jumpSprites[0].y,
-              this.jumpSprites[0].w, this.jumpSprites[0].h,
-              this.x, this.y,
-              this.jumpSprites[0].w, this.jumpSprites[0].h
+                this.img,
+                this.jumpSprites[0].x, this.jumpSprites[0].y,
+                this.jumpSprites[0].w, this.jumpSprites[0].h,
+                this.x, this.y,
+                this.jumpSprites[0].w, this.jumpSprites[0].h
             );
         }
     }
@@ -277,13 +323,18 @@ class Game
         this.background = new Background(canvas, 'img/bg.png');
         this.groundY = 84;
         this.balloonTimer = 0;
+        this.boxTimer = 0;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
+        this.boxes = [];
         this.balloonSpawnInterval = 25;
+        this.boxSpawnInterval = 500;
         this.collectSound = new Sound('sound/collect.wav');
         this.balloonSpeed = -5.5;
         this.player = new Player(100, this.groundY, 10, this.ctx);
+        this.box = new Box(-1500,300,7,0,this.ctx);
+        this.boxSpeed = 7;
         this.score = 0;
     }
 
@@ -344,16 +395,33 @@ class Game
             this.balloonColorsCopy.splice(randomBalloonColorIdx, 1);
 
             this.balloons.push(new Balloon(
-              700,
-              Helper.getRandomInt(150, 250),
-              this.balloonSpeed,
-              0,
-              randomBalloonColor,
-              this.ctx
+                700,
+                Helper.getRandomInt(100, 200),
+                this.balloonSpeed,
+                0,
+                randomBalloonColor,
+                this.ctx
             ));
+
 
             this.balloonSpawnInterval = Helper.getRandomInt(100, 200);
             this.balloonTimer = 0;
+        }
+
+        if (this.boxTimer % this.boxSpawnInterval === 0)
+        {
+
+            this.boxes.push(new Box(
+                730,
+                this.box.y,
+                this.boxSpeed,
+                this.box.dy,
+                this.ctx
+            ));
+
+
+            this.boxSpawnInterval = Helper.getRandomInt(1000,900)
+            this.boxTimer = 0;
         }
     }
 
@@ -374,8 +442,6 @@ class Game
                 this.collectSound.play();
                 Helper.removeIndex(this.balloons, i);
                 this._scoreUpdate();
-                this.background.scrollSpeed += 0.1;
-                this.balloonSpeed -= 0.1;
             }
 
             // Remove the balloon if out of screen.
@@ -385,17 +451,39 @@ class Game
             }
         }
         this.balloonTimer++;
+        this.boxTimer++;
+
+        for (let a in this.boxes)
+        {
+
+            this.boxes[a].update();
+
+            if (this.boxes.hasOwnProperty(a) && this.player.collidesWith(this.boxes[a]))
+            {
+                throw new Error('GAME OVER!');
+            }
+
+            if (this.boxes.hasOwnProperty(a) && this.boxes[a].outOfScreen())
+            {
+                Helper.removeIndex(this.boxes, a);
+            }
+
+        }
     }
 
     _draw(dt)
     {
         this.background.draw();
         this.player.draw();
-
+        this.box.draw();
         // Draw balloons
         for (let i in this.balloons)
         {
             this.balloons[i].draw();
+        }
+        for (let a in this.boxes)
+        {
+            this.boxes[a].draw();
         }
     }
 
@@ -423,5 +511,5 @@ class Game
     }
 }
 
-let canvas = new Canvas(750, 500);
+let canvas = new Canvas(800, 500);
 let game = new Game(canvas);
