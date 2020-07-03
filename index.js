@@ -151,8 +151,8 @@ class Box
         this.y = y;
         this.dx = dx;
         this.dy = dy;
-        this.w = 56;
-        this.h = 112;
+        this.w = 50;
+        this.h = 100;
         this.radius = 40;
         this.ctx = context;
         this.img = new Image();
@@ -172,6 +172,53 @@ class Box
           this.x, this.y,
           this.w, this.h
         );
+    }
+
+    outOfScreen()
+    {
+        return this.x + this.w < 0 || this.x > this.ctx.canvas.width || this.y > this.ctx.canvas.height;
+    }
+
+    collidesWith(object)
+    {
+        return this.distanceBetween(object) < (this.radius + object.radius);
+    }
+
+    distanceBetween(object)
+    {
+        return Math.sqrt(Math.pow(this.x - object.x, 2) + Math.pow(this.y - object.y, 2));
+    }
+
+}
+class Spike
+{
+    constructor(x, y, dx, dy, context) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.radius = 40;
+        this.w = 93;
+        this.h = 36;
+        this.ctx = context;
+        this.img = new Image();
+        this.img.src = 'img/spike.png';
+    }
+
+    update()
+    {
+        this.x -= this.dx;
+        this.y -= this.dy;
+    }
+
+    draw()
+    {
+        this.ctx.drawImage(
+            this.img,
+            this.x, this.y,
+            this.w, this.h
+        )
+
     }
 
     outOfScreen()
@@ -324,19 +371,25 @@ class Game
         this.groundY = 84;
         this.balloonTimer = 0;
         this.boxTimer = 0;
+        this.spikeTimer = 0;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
         this.boxes = [];
+        this.spikes = [];
         this.balloonSpawnInterval = 25;
+        this.spikeSpawnInterval = 1200;
         this.boxSpawnInterval = 500;
         this.collectSound = new Sound('sound/collect.wav');
-        this.boxCollideSound = new Sound('sound/boxcollide.mp3')
+        this.boxCollideSound = new Sound('sound/boxcollide.mp3');
         this.balloonSpeed = -5.5;
         this.player = new Player(100, this.groundY, 10, this.ctx);
         this.box = new Box(1500,300,7,0,this.ctx);
+        this.spike = new Spike(1800, 365, 7, 0, this.ctx);
+        this.spikeSpeed = 7;
         this.boxSpeed = 7;
         this.score = 0;
+
     }
 
     start()
@@ -408,7 +461,19 @@ class Game
             this.balloonSpawnInterval = Helper.getRandomInt(100, 200);
             this.balloonTimer = 0;
         }
+        if (this.spikeTimer % this.spikeSpawnInterval === 0)
+        {
+            this.spikes.push(new Spike(
+                949,
+                this.spike.y,
+                this.spikeSpeed,
+                this.spike.dy,
+                this.ctx
+                ));
 
+            this.spikeSpawnInterval = Helper.getRandomInt(1600,1500);
+            this.spikeTimer = 0;
+        }
         if (this.boxTimer % this.boxSpawnInterval === 0)
         {
 
@@ -462,7 +527,7 @@ class Game
             if (this.boxes.hasOwnProperty(a) && this.player.collidesWith(this.boxes[a]))
             {
                 this.boxCollideSound.play();
-                throw new Error('GAME OVER!');
+                throw new Error("GAME OVER!");
             }
 
             if (this.boxes.hasOwnProperty(a) && this.boxes[a].outOfScreen())
@@ -472,11 +537,28 @@ class Game
 
 
 
-
-
-
-
         }
+
+        for (let s in this.spikes)
+        {
+
+            this.spikes[s].update();
+
+            if (this.spikes.hasOwnProperty(s) && this.player.collidesWith(this.spikes[s]))
+            {
+                document.getElementById("game-over").style.display = "block";
+                throw new Error("GAME OVER!");
+            }
+
+            // Remove the balloon if out of screen.
+            if (this.spikes.hasOwnProperty(s) && this.spikes[s].outOfScreen())
+            {
+                Helper.removeIndex(this.spikes, s);
+            }
+        }
+
+        this.spikeTimer++;
+
     }
 
     _draw(dt)
@@ -484,6 +566,7 @@ class Game
         this.background.draw();
         this.player.draw();
         this.box.draw();
+        this.spike.draw();
         // Draw balloons
         for (let i in this.balloons)
         {
@@ -492,6 +575,10 @@ class Game
         for (let a in this.boxes)
         {
             this.boxes[a].draw();
+        }
+        for (let s in this.spikes)
+        {
+            this.spikes[s].draw();
         }
     }
 
@@ -519,5 +606,5 @@ class Game
     }
 }
 
-let canvas = new Canvas(1000, 500);
+let canvas = new Canvas(950, 500);
 let game = new Game(canvas);
