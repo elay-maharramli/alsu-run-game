@@ -526,6 +526,8 @@ class Game
 
             if (this.boxes.hasOwnProperty(a) && this.player.collidesWith(this.boxes[a]))
             {
+                this.ctx.font = "40px Impact";
+                this.ctx.fillText("Game Over!", 400, 235);
                 this.boxCollideSound.play();
                 throw new Error("GAME OVER!");
             }
@@ -546,6 +548,8 @@ class Game
 
             if (this.spikes.hasOwnProperty(s) && this.player.collidesWith(this.spikes[s]))
             {
+                this.ctx.font = "40px Impact";
+                this.ctx.fillText("Game Over!", 400, 235);
                 document.getElementById("game-over").style.display = "block";
                 throw new Error("GAME OVER!");
             }
