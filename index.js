@@ -338,6 +338,7 @@ class Game
         this.spikeSpeed = 7;
         this.boxSpeed = 7;
         this.score = 0;
+        this.life = 3;
     }
     start()
     {
@@ -403,7 +404,7 @@ class Game
                 this.spike.dy,
                 this.ctx
             ));
-            this.spikeSpawnInterval = Helper.getRandomInt(1600,1500);
+            this.spikeSpawnInterval = Helper.getRandomInt(1500,1600);
             this.spikeTimer = 0;
         }
         if (this.boxTimer % this.boxSpawnInterval === 0)
@@ -415,7 +416,7 @@ class Game
                 this.box.dy,
                 this.ctx
             ));
-            this.boxSpawnInterval = Helper.getRandomInt(1000,900)
+            this.boxSpawnInterval = Helper.getRandomInt(900,1000)
             this.boxTimer = 0;
         }
     }
@@ -449,11 +450,11 @@ class Game
 
             if (this.boxes.hasOwnProperty(a) && this.player.collidesWith(this.boxes[a]))
             {
-                this.ctx.font = "40px Impact";
-                this.ctx.fillText("Game Over!", 400, 235);
+                Helper.removeIndex(this.boxes, a);
                 this.boxCollideSound.play();
-                throw new Error("GAME OVER!");
+                this._lifeUpdate();
             }
+
             if (this.boxes.hasOwnProperty(a) && this.boxes[a].x < 0)
             {
                 Helper.removeIndex(this.boxes, a);
@@ -465,16 +466,25 @@ class Game
 
             if (this.spikes.hasOwnProperty(s) && this.player.collidesWith(this.spikes[s]))
             {
-                this.ctx.font = "40px Impact";
-                this.ctx.fillText("Game Over!", 400, 235);
-                document.getElementById("game-over").style.display = "block";
-                throw new Error("GAME OVER!");
+                //this.ctx.font = "40px Impact";
+                //this.ctx.fillText("Game Over!", 400, 235);
+                //document.getElementById("game-over").style.display = "block";
+                //throw new Error("GAME OVER!");
+                Helper.removeIndex(this.spikes, s);
+                this._lifeUpdate();
             }
             // Remove the balloon if out of screen.
             if (this.spikes.hasOwnProperty(s) && this.spikes[s].x < 0)
             {
                 Helper.removeIndex(this.spikes, s);
             }
+        }
+        if (this.life === 0)
+        {
+            this.ctx.font = "40px Impact";
+            this.ctx.fillText("Game Over!", 400, 235);
+            document.getElementById("game-over").style.display = "block";
+            throw new Error("GAME OVER!");
         }
     }
     _draw(dt)
@@ -517,6 +527,12 @@ class Game
         document.getElementById('game-score').innerText = '' + ++this.score;
         document.getElementById('game-score').innerText = '' + ++this.score;
     }
+
+    _lifeUpdate()
+    {
+        document.getElementById('game-life').innerText = '' + --this.life;
+    }
+
 }
 let canvas = new Canvas(950, 500);
 let game = new Game(canvas);
