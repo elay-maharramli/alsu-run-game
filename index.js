@@ -384,7 +384,7 @@ class Game
             // Remove current generated balloon from copy
             this.balloonColorsCopy.splice(randomBalloonColorIdx, 1);
             this.balloons.push(new Balloon(
-                700,
+                800,
                 Helper.getRandomInt(100, 200),
                 this.balloonSpeed,
                 0,
@@ -397,7 +397,7 @@ class Game
         if (this.spikeTimer % this.spikeSpawnInterval === 0)
         {
             this.spikes.push(new Spike(
-                949,
+                7000,
                 this.spike.y,
                 this.spikeSpeed,
                 this.spike.dy,
@@ -409,7 +409,7 @@ class Game
         if (this.boxTimer % this.boxSpawnInterval === 0)
         {
             this.boxes.push(new Box(
-                900,
+                5000,
                 this.box.y,
                 this.boxSpeed,
                 this.box.dy,
@@ -435,13 +435,14 @@ class Game
                 this._scoreUpdate();
             }
             // Remove the balloon if out of screen.
-            if (this.balloons.hasOwnProperty(i) && this.balloons[i].outOfScreen())
+            if (this.balloons.hasOwnProperty(i) && this.balloons[i].x < 0)
             {
                 Helper.removeIndex(this.balloons, i);
             }
         }
         this.balloonTimer++;
         this.boxTimer++;
+        this.spikeTimer++;
         for (let a in this.boxes)
         {
             this.boxes[a].update();
@@ -453,7 +454,7 @@ class Game
                 this.boxCollideSound.play();
                 throw new Error("GAME OVER!");
             }
-            if (this.boxes.hasOwnProperty(a) && this.boxes[a].outOfScreen())
+            if (this.boxes.hasOwnProperty(a) && this.boxes[a].x < 0)
             {
                 Helper.removeIndex(this.boxes, a);
             }
@@ -470,12 +471,11 @@ class Game
                 throw new Error("GAME OVER!");
             }
             // Remove the balloon if out of screen.
-            if (this.spikes.hasOwnProperty(s) && this.spikes[s].outOfScreen())
+            if (this.spikes.hasOwnProperty(s) && this.spikes[s].x < 0)
             {
                 Helper.removeIndex(this.spikes, s);
             }
         }
-        this.spikeTimer++;
     }
     _draw(dt)
     {
