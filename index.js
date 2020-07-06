@@ -89,6 +89,42 @@ class Background
         this.ctx.drawImage(this.img, this.ctx.canvas.width - this.scrollX, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 }
+class Coin
+{
+    constructor(x, y, dx, dy, context)
+    {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.w = 70;
+        this.h = 70;
+        this.radius = 20;
+        this.ctx = context;
+        this.img = new Image();
+        this.img.src = 'img/coinGold.png';
+    }
+
+    update()
+    {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    draw()
+    {
+        this.ctx.drawImage(
+            this.img,
+            this.x, this.y,
+            this.w, this.h
+        )
+    }
+
+    outOfScreen()
+    {
+        return this.x + this.w < 0 || this.x > this.ctx.canvas.width || this.y > this.ctx.canvas.height;
+    }
+}
 class Balloon
 {
     constructor(x, y, dx, dy, color, context)
@@ -319,19 +355,24 @@ class Game
         this.background = new Background(canvas, 'img/bg.png');
         this.groundY = 84;
         this.balloonTimer = 0;
+        this.coinTimer = 0;
         this.boxTimer = 0;
         this.spikeTimer = 0;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
+        this.coins = [];
         this.boxes = [];
         this.spikes = [];
         this.balloonSpawnInterval = 25;
+        this.coinSpawnInterval = 50;
         this.spikeSpawnInterval = 1200;
         this.boxSpawnInterval = 500;
         this.collectSound = new Sound('sound/collect.wav');
+        this.coinCollectSound = new Sound('sound/coinCollect.wav')
         this.boxCollideSound = new Sound('sound/boxcollide.mp3');
         this.balloonSpeed = -5.5;
+        this.coinSpeed = -6.0;
         this.player = new Player(100, this.groundY, 10, this.ctx);
         this.box = new Box(1500,300,7,0,this.ctx);
         this.spike = new Spike(1800, 365, 7, 0, this.ctx);
@@ -385,7 +426,7 @@ class Game
             // Remove current generated balloon from copy
             this.balloonColorsCopy.splice(randomBalloonColorIdx, 1);
             this.balloons.push(new Balloon(
-                800,
+                900,
                 Helper.getRandomInt(100, 200),
                 this.balloonSpeed,
                 0,
@@ -394,6 +435,19 @@ class Game
             ));
             this.balloonSpawnInterval = Helper.getRandomInt(100, 200);
             this.balloonTimer = 0;
+        }
+
+        if (this.coinTimer % this.coinSpawnInterval === 0)
+        {
+            this.coins.push(new Coin(
+                949,
+                Helper.getRandomInt(70,150),
+                this.coinSpeed,
+                0,
+                this.ctx
+            ));
+            this.coinSpawnInterval = Helper.getRandomInt(700,800);
+            this.coinTimer = 0;
         }
         if (this.spikeTimer % this.spikeSpawnInterval === 0)
         {
@@ -441,9 +495,26 @@ class Game
                 Helper.removeIndex(this.balloons, i);
             }
         }
+        for (let c in this.coins)
+        {
+            // Update coin position
+            this.coins[c].update();
+            if (this.coins.hasOwnProperty(c) && this.player.collidesWith(this.coins[c]))
+            {
+                this.coinCollectSound.play();
+                Helper.removeIndex(this.coins, c);
+                this._coinUpdate();
+            }
+            // Remove the coin if out of screen
+            if (this.coins.hasOwnProperty(c) && this.coins[c].x < 0)
+            {
+                Helper.removeIndex(this.coins, c);
+            }
+        }
         this.balloonTimer++;
         this.boxTimer++;
         this.spikeTimer++;
+        this.coinTimer += 6;
         for (let a in this.boxes)
         {
             this.boxes[a].update();
@@ -506,6 +577,10 @@ class Game
         {
             this.spikes[s].draw();
         }
+        for (let c in this.coins)
+        {
+            this.coins[c].draw();
+        }
     }
     _mouseLeftClick(event)
     {
@@ -525,12 +600,17 @@ class Game
     _scoreUpdate()
     {
         document.getElementById('game-score').innerText = '' + ++this.score;
-        document.getElementById('game-score').innerText = '' + ++this.score;
     }
 
     _lifeUpdate()
     {
         document.getElementById('game-life').innerText = '' + --this.life;
+    }
+
+    _coinUpdate()
+    {
+        document.getElementById('game-score').innerText = '' + ++this.score;
+        document.getElementById('game-score').innerText = '' + ++this.score;
     }
 
 }
