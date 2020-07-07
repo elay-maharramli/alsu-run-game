@@ -239,6 +239,50 @@ class Spike
         return Math.sqrt(Math.pow(this.x - object.x, 2) + Math.pow(this.y - object.y, 2));
     }
 }
+class Heart
+{
+    constructor(x, y, dx, dy, context)
+    {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.radius = 25;
+        this.ctx = context;
+        this.w = 53;
+        this.h = 45;
+        this.img = new Image();
+        this.img.src = 'img/heart.png';
+    }
+
+    update()
+    {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    draw()
+    {
+        this.ctx.drawImage(
+            this.img,
+            this.x, this.y,
+            this.w, this.h
+        )
+    }
+
+    outOfScreen()
+    {
+        return this.x + this.w < 0 || this.x > this.ctx.canvas.width || this.y > this.ctx.canvas.height;
+    }
+    collidesWith(object)
+    {
+        return this.distanceBetween(object) < (this.radius + object.radius);
+    }
+    distanceBetween(object)
+    {
+        return Math.sqrt(Math.pow(this.x - object.x, 2) + Math.pow(this.y - object.y, 2));
+    }
+}
 class Player
 {
     constructor(x, groundY, speed, context)
@@ -356,28 +400,33 @@ class Game
         this.groundY = 84;
         this.balloonTimer = 0;
         this.coinTimer = 0;
+        this.heartTimer = 0;
         this.boxTimer = 0;
         this.spikeTimer = 0;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
+        this.hearts = [];
         this.coins = [];
         this.boxes = [];
         this.spikes = [];
         this.balloonSpawnInterval = 25;
+        this.heartSpawnInterval = 5000;
         this.coinSpawnInterval = 50;
         this.spikeSpawnInterval = 1200;
         this.boxSpawnInterval = 500;
         this.collectSound = new Sound('sound/collect.wav');
+        this.heartCollectSound = new Sound('sound/heartCollect.mp3');
         this.coinCollectSound = new Sound('sound/coinCollect.wav')
         this.boxCollideSound = new Sound('sound/boxcollide.mp3');
         this.balloonSpeed = -5.5;
         this.coinSpeed = -6.0;
+        this.heartSpeed = -9.0;
         this.player = new Player(100, this.groundY, 10, this.ctx);
-        this.box = new Box(1500,300,7,0,this.ctx);
-        this.spike = new Spike(1800, 365, 7, 0, this.ctx);
-        this.spikeSpeed = 7;
-        this.boxSpeed = 7;
+        this.box = new Box(1500,300,6,0,this.ctx);
+        this.spike = new Spike(1800, 365, 6, 0, this.ctx);
+        this.spikeSpeed = 6;
+        this.boxSpeed = 6;
         this.score = 0;
         this.life = 3;
     }
@@ -426,7 +475,7 @@ class Game
             // Remove current generated balloon from copy
             this.balloonColorsCopy.splice(randomBalloonColorIdx, 1);
             this.balloons.push(new Balloon(
-                900,
+                1000,
                 Helper.getRandomInt(100, 200),
                 this.balloonSpeed,
                 0,
@@ -437,16 +486,29 @@ class Game
             this.balloonTimer = 0;
         }
 
+        if (this.heartTimer % this.heartSpawnInterval === 0)
+        {
+            this.hearts.push(new Heart(
+                900,
+                Helper.getRandomInt(180, 200),
+                this.heartSpeed,
+                0,
+                this.ctx
+            ));
+            this.heartSpawnInterval = Helper.getRandomInt(5900, 6000);
+            this.heartTimer = 0;
+        }
+
         if (this.coinTimer % this.coinSpawnInterval === 0)
         {
             this.coins.push(new Coin(
-                949,
+                800,
                 Helper.getRandomInt(70,150),
                 this.coinSpeed,
                 0,
                 this.ctx
             ));
-            this.coinSpawnInterval = Helper.getRandomInt(700,800);
+            this.coinSpawnInterval = Helper.getRandomInt(1700,1800);
             this.coinTimer = 0;
         }
         if (this.spikeTimer % this.spikeSpawnInterval === 0)
@@ -495,6 +557,25 @@ class Game
                 Helper.removeIndex(this.balloons, i);
             }
         }
+
+        for (let h in this.hearts)
+        {
+            // Update heart position
+            this.hearts[h].update();
+
+            if (this.hearts.hasOwnProperty(h) && this.player.collidesWith(this.hearts[h]))
+            {
+                this.heartCollectSound.play();
+                Helper.removeIndex(this.hearts, h);
+                this._heartUpdate();
+            }
+            // Remove the heart if out of screen.
+            if (this.hearts.hasOwnProperty(h) && this.hearts[h].x < 0)
+            {
+                Helper.removeIndex(this.hearts, h);
+            }
+        }
+
         for (let c in this.coins)
         {
             // Update coin position
@@ -511,10 +592,12 @@ class Game
                 Helper.removeIndex(this.coins, c);
             }
         }
+
         this.balloonTimer++;
         this.boxTimer++;
         this.spikeTimer++;
-        this.coinTimer += 6;
+        this.coinTimer += 12;
+        this.heartTimer += 30;
         for (let a in this.boxes)
         {
             this.boxes[a].update();
@@ -552,7 +635,7 @@ class Game
         }
         if (this.life === 0)
         {
-            this.ctx.font = "40px Impact";
+            this.ctx.font = "50px Impact";
             this.ctx.fillText("Game Over!", 400, 235);
             document.getElementById("game-over").style.display = "block";
             throw new Error("GAME OVER!");
@@ -580,6 +663,10 @@ class Game
         for (let c in this.coins)
         {
             this.coins[c].draw();
+        }
+        for (let h in this.hearts)
+        {
+            this.hearts[h].draw();
         }
     }
     _mouseLeftClick(event)
@@ -611,6 +698,11 @@ class Game
     {
         document.getElementById('game-score').innerText = '' + ++this.score;
         document.getElementById('game-score').innerText = '' + ++this.score;
+    }
+
+    _heartUpdate()
+    {
+        document.getElementById('game-life').innerText = '' + ++this.life;
     }
 
 }
