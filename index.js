@@ -398,11 +398,11 @@ class Game
         this.ctx = canvas.context;
         this.background = new Background(canvas, 'img/bg.png');
         this.groundY = 84;
-        this.balloonTimer = 0;
-        this.coinTimer = 0;
-        this.heartTimer = 0;
-        this.boxTimer = 0;
-        this.spikeTimer = 0;
+        this.balloonTimer = 1;
+        this.coinTimer = 1;
+        this.heartTimer = 1;
+        this.boxTimer = 1;
+        this.spikeTimer = 1;
         this.balloonColors = ['aqua', 'blue', 'green', 'pink', 'red', 'black', 'purple'];
         this.balloonColorsCopy = [...this.balloonColors];
         this.balloons = [];
@@ -490,7 +490,7 @@ class Game
         {
             this.hearts.push(new Heart(
                 900,
-                Helper.getRandomInt(180, 200),
+                Helper.getRandomInt(120, 125),
                 this.heartSpeed,
                 0,
                 this.ctx
